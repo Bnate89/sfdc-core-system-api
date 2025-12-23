@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- ============================================== -->
+	<!-- GET TRANSACTIONS SUBFLOW                      -->
+	<!-- Retrieves account transactions                -->
+	<!-- ============================================== -->
+	<sub-flow name="get-transactions-subflow" doc:name="Get Transactions Implementation" doc:id="8e78423b-b174-4200-8480-b65c8b1e0cee">
+		<!-- Extract URI and query parameters -->
+		<set-variable variableName="accountId" value="#[attributes.uriParams.accountId]" doc:name="Set Account ID"/>
+		<set-variable variableName="fromDate" value="#[attributes.queryParams.fromDate]" doc:name="Set From Date"/>
+		<set-variable variableName="toDate" value="#[attributes.queryParams.toDate]" doc:name="Set To Date"/>
+		<set-variable variableName="limit" value="#[attributes.queryParams.limit default 50]" doc:name="Set Limit"/>
+		
+		<logger level="DEBUG" doc:name="Log Transactions Lookup" 
+			message="#['[' ++ vars.correlationId ++ '] Looking up transactions for account: ' ++ vars.accountId ++ ' | fromDate: ' ++ (vars.fromDate default 'N/A') ++ ' | toDate: ' ++ (vars.toDate default 'N/A') ++ ' | limit: ' ++ vars.limit]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Transactions Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+	{
+		transactionId: "TXN-001",
+		accountId: vars.accountId,
+		amount: 1500.00,
+		currency: "USD",
+		transactionType: "CREDIT",
+		transactionDate: now() - |P2D|,
+		description: "Direct Deposit - Payroll"
+	},
+	{
+		transactionId: "TXN-002",
+		accountId: vars.accountId,
+		amount: -75.50,
+		currency: "USD",
+		transactionType: "DEBIT",
+		transactionDate: now() - |P1D|,
+		description: "POS Purchase - Grocery Store"
+	},
+	{
+		transactionId: "TXN-003",
+		accountId: vars.accountId,
+		amount: -250.00,
+		currency: "USD",
+		transactionType: "DEBIT",
+		transactionDate: now(),
+		description: "Bill Payment - Utilities"
+	},
+	{
+		transactionId: "TXN-004",
+		accountId: vars.accountId,
+		amount: 500.00,
+		currency: "USD",
+		transactionType: "CREDIT",
+		transactionDate: now(),
+		description: "Transfer from Savings"
+	}
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build success response -->
+		<flow-ref doc:name="Build Success Response" name="common-build-success-response-subflow"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- CREATE TRANSACTION SUBFLOW                    -->
+	<!-- Posts a new transaction (credit/debit)        -->
+	<!-- ============================================== -->
+	<sub-flow name="create-transaction-subflow" doc:name="Create Transaction Implementation" doc:id="d46f8e87-ecd4-44a1-b3d8-afdeff655d08">
+		<!-- Extract URI parameter and store payload -->
+		<set-variable variableName="accountId" value="#[attributes.uriParams.accountId]" doc:name="Set Account ID"/>
+		<set-variable variableName="transactionRequest" value="#[payload]" doc:name="Store Transaction Request"/>
+		
+		<logger level="DEBUG" doc:name="Log Transaction Creation" 
+			message="#['[' ++ vars.correlationId ++ '] Creating transaction for account: ' ++ vars.accountId ++ ' | Type: ' ++ vars.transactionRequest.transactionType ++ ' | Amount: ' ++ vars.transactionRequest.amount]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Created Transaction Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	transactionId: uuid(),
+	accountId: vars.accountId,
+	amount: vars.transactionRequest.amount,
+	currency: vars.transactionRequest.currency,
+	transactionType: vars.transactionRequest.transactionType,
+	transactionDate: now(),
+	description: vars.transactionRequest.description
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build 201 Created response -->
+		<flow-ref doc:name="Build Created Response" name="common-build-created-response-subflow"/>
+	</sub-flow>
+
+</mule>

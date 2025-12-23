@@ -1,0 +1,18 @@
+# Core Banking System API - QA Secure Properties
+# Values should be encrypted using secure-properties-tool
+# Format: ![encrypted_value]
+
+secure:
+  encryption:
+    key: "qa-encryption-key-16b"
+  keystore:
+    path: "keystore/server-qa.jks"
+    password: "![changeit]"
+    keyPassword: "![changeit]"
+    alias: "server"
+  truststore:
+    path: "keystore/truststore-qa.jks"
+    password: "![changeit]"
+  backend:
+    clientId: "![qa-client-id]"
+    clientSecret: "![qa-client-secret]"

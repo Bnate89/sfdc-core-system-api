@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+		http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- ============================================== -->
+	<!-- ACCOUNT API TESTS                             -->
+	<!-- MUnit tests for Account operations            -->
+	<!-- ============================================== -->
+
+	<munit:config name="account-tests.xml"/>
+
+	<!-- ============================================== -->
+	<!-- TEST: GET Accounts - Success                  -->
+	<!-- ============================================== -->
+	<munit:test name="get-accounts-success-test" doc:name="GET /accounts - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:attributes value="#[{
+					method: 'GET',
+					requestPath: '/api/core-banking/v1/accounts',
+					queryParams: {
+						customerId: 'CUST-12345'
+					},
+					headers: {
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Get Accounts" name="get:\accounts:sfdc-core-system-api-config" doc:id="749156e7-291e-449d-84d0-c37c44ebf144"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Array Response" 
+				expression="#[sizeOf(payload)]" 
+				is="#[MunitTools::greaterThan(0)]"/>
+			<munit-tools:assert-that doc:name="Assert First Account Has Customer ID" 
+				expression="#[payload[0].customerId]" 
+				is="#[MunitTools::equalTo('CUST-12345')]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: POST Account - Success                  -->
+	<!-- ============================================== -->
+	<munit:test name="create-account-success-test" doc:name="POST /accounts - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:payload value='#[{
+					"customerId": "CUST-12345",
+					"accountType": "SAVINGS",
+					"currency": "USD"
+				}]' mediaType="application/json"/>
+				<munit:attributes value="#[{
+					method: 'POST',
+					requestPath: '/api/core-banking/v1/accounts',
+					headers: {
+						'Content-Type': 'application/json',
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Create Account" name="post:\accounts:application\json:sfdc-core-system-api-config" doc:id="9dba797b-2ba3-4b5d-af0c-09b5b89712f7"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Account ID Generated" 
+				expression="#[payload.accountId]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Account Type" 
+				expression="#[payload.accountType]" 
+				is="#[MunitTools::equalTo('SAVINGS')]"/>
+			<munit-tools:assert-that doc:name="Assert Status Active" 
+				expression="#[payload.status]" 
+				is="#[MunitTools::equalTo('ACTIVE')]"/>
+			<munit-tools:assert-equals doc:name="Assert HTTP Status 201" 
+				actual="#[vars.httpStatus]" 
+				expected="#[201]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: GET Account By ID - Success             -->
+	<!-- ============================================== -->
+	<munit:test name="get-account-by-id-success-test" doc:name="GET /accounts/{accountId} - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:attributes value="#[{
+					method: 'GET',
+					requestPath: '/api/core-banking/v1/accounts/ACC-001',
+					uriParams: {
+						accountId: 'ACC-001'
+					},
+					headers: {
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Get Account By ID" name="get:\accounts\(accountId):sfdc-core-system-api-config" doc:id="caf9602e-fb0e-492b-8ebb-fc7181ca9ef7"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Account ID" 
+				expression="#[payload.accountId]" 
+				is="#[MunitTools::equalTo('ACC-001')]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: PUT Account - Success                   -->
+	<!-- ============================================== -->
+	<munit:test name="update-account-success-test" doc:name="PUT /accounts/{accountId} - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:payload value='#[{
+					"customerId": "CUST-12345",
+					"accountType": "CHECKING",
+					"currency": "USD",
+					"status": "DORMANT",
+					"openedDate": "2020-01-15"
+				}]' mediaType="application/json"/>
+				<munit:attributes value="#[{
+					method: 'PUT',
+					requestPath: '/api/core-banking/v1/accounts/ACC-001',
+					uriParams: {
+						accountId: 'ACC-001'
+					},
+					headers: {
+						'Content-Type': 'application/json',
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Update Account" name="post:\accounts:application\json:sfdc-core-system-api-config" doc:id="f4456ef2-cbe9-42f2-9266-62c608dfc7df"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Account ID" 
+				expression="#[payload.accountId]" 
+				is="#[MunitTools::equalTo('ACC-001')]"/>
+			<munit-tools:assert-that doc:name="Assert Status Updated" 
+				expression="#[payload.status]" 
+				is="#[MunitTools::equalTo('DORMANT')]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: GET Account Balance - Success           -->
+	<!-- ============================================== -->
+	<munit:test name="get-account-balance-success-test" doc:name="GET /accounts/{accountId}/balance - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:attributes value="#[{
+					method: 'GET',
+					requestPath: '/api/core-banking/v1/accounts/ACC-001/balance',
+					uriParams: {
+						accountId: 'ACC-001'
+					},
+					headers: {
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Get Account Balance" name="get:\accounts\(accountId)\balance:sfdc-core-system-api-config" doc:id="6b2ef22b-5a21-4f66-b9ab-94da1232b4c1"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Account ID" 
+				expression="#[payload.accountId]" 
+				is="#[MunitTools::equalTo('ACC-001')]"/>
+			<munit-tools:assert-that doc:name="Assert Available Balance" 
+				expression="#[payload.availableBalance]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Currency" 
+				expression="#[payload.currency]" 
+				is="#[MunitTools::equalTo('USD')]"/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

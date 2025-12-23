@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- ============================================== -->
+	<!-- CORRELATION ID HANDLING                       -->
+	<!-- Initializes or propagates correlation ID      -->
+	<!-- ============================================== -->
+	<sub-flow name="common-correlation-id-subflow" doc:name="Correlation ID Handler">
+		<ee:transform doc:name="Set Correlation ID">
+			<ee:variables>
+				<ee:set-variable variableName="correlationId"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.'x-correlation-id' default correlationId]]></ee:set-variable>
+				<ee:set-variable variableName="requestTimestamp"><![CDATA[%dw 2.0
+output application/java
+---
+now()]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- REQUEST LOGGING                               -->
+	<!-- Logs incoming request details                 -->
+	<!-- ============================================== -->
+	<sub-flow name="common-log-request-subflow" doc:name="Log Request">
+		<logger level="INFO" doc:name="Log Request" 
+			message="#['[' ++ vars.correlationId ++ '] REQUEST: ' ++ attributes.method ++ ' ' ++ attributes.requestPath ++ ' | QueryParams: ' ++ (attributes.queryParams as String default '{}')]"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- RESPONSE LOGGING                              -->
+	<!-- Logs outgoing response details                -->
+	<!-- ============================================== -->
+	<sub-flow name="common-log-response-subflow" doc:name="Log Response">
+		<logger level="INFO" doc:name="Log Response" 
+			message="#['[' ++ vars.correlationId ++ '] RESPONSE: Status=' ++ (vars.httpStatus default 200) ++ ' | Duration=' ++ ((now() - vars.requestTimestamp) as Number {unit: 'milliseconds'}) ++ 'ms']"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- ERROR LOGGING                                 -->
+	<!-- Logs error details with masking               -->
+	<!-- ============================================== -->
+	<sub-flow name="common-log-error-subflow" doc:name="Log Error">
+		<logger level="ERROR" doc:name="Log Error" 
+			message="#['[' ++ vars.correlationId ++ '] ERROR: ' ++ (error.errorType.identifier default 'UNKNOWN') ++ ' | Message: ' ++ (error.description default 'No description available')]"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- SUCCESS RESPONSE BUILDER                      -->
+	<!-- Builds standardized success response          -->
+	<!-- ============================================== -->
+	<sub-flow name="common-build-success-response-subflow" doc:name="Build Success Response">
+		<ee:transform doc:name="Add Response Headers">
+			<ee:variables>
+				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"x-correlation-id": vars.correlationId,
+	"Content-Type": "application/json"
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- 201 CREATED RESPONSE BUILDER                  -->
+	<!-- Builds standardized 201 response              -->
+	<!-- ============================================== -->
+	<sub-flow name="common-build-created-response-subflow" doc:name="Build Created Response">
+		<ee:transform doc:name="Set 201 Status and Headers">
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus"><![CDATA[201]]></ee:set-variable>
+				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"x-correlation-id": vars.correlationId,
+	"Content-Type": "application/json"
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- NOT FOUND ERROR RAISER                        -->
+	<!-- Raises APP:NOT_FOUND error                    -->
+	<!-- ============================================== -->
+	<sub-flow name="common-raise-not-found-subflow" doc:name="Raise Not Found Error">
+		<raise-error doc:name="Raise NOT_FOUND" type="APP:NOT_FOUND" description="#[vars.notFoundMessage default 'Resource not found']"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- BAD REQUEST ERROR RAISER                      -->
+	<!-- Raises APP:BAD_REQUEST error                  -->
+	<!-- ============================================== -->
+	<sub-flow name="common-raise-bad-request-subflow" doc:name="Raise Bad Request Error">
+		<raise-error doc:name="Raise BAD_REQUEST" type="APP:BAD_REQUEST" description="#[vars.badRequestMessage default 'Invalid request data']"/>
+	</sub-flow>
+
+</mule>

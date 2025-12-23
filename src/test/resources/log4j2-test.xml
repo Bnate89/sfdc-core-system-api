@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <!-- ============================================== -->
+    <!-- CORE BANKING SYSTEM API - TEST LOG4J2 CONFIG  -->
+    <!-- ============================================== -->
+
+    <Properties>
+        <Property name="LOG_PATTERN">%-5p %d{HH:mm:ss.SSS} [%X{correlationId}] %c{1}: %m%n</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- HTTP Logging - Reduced for tests -->
+        <AsyncLogger name="org.mule.service.http.impl.service.HttpMessageLogger" level="WARN"/>
+        <AsyncLogger name="org.mule.service.http" level="WARN"/>
+        <AsyncLogger name="org.mule.extension.http" level="WARN"/>
+
+        <!-- Reduce startup noise -->
+        <AsyncLogger name="com.mulesoft.mule.runtime.plugin" level="WARN"/>
+        <AsyncLogger name="org.mule.maven.client" level="WARN"/>
+        <AsyncLogger name="org.mule.runtime.core.internal.util" level="WARN"/>
+        <AsyncLogger name="org.quartz" level="WARN"/>
+        <AsyncLogger name="org.mule.munit.plugins.coverage.server" level="WARN"/>
+
+        <!-- APIkit Logging -->
+        <AsyncLogger name="org.mule.module.apikit" level="WARN"/>
+
+        <!-- Secure Properties - Never log at DEBUG -->
+        <AsyncLogger name="com.mulesoft.modules.secure.properties" level="WARN"/>
+
+        <!-- Object Store -->
+        <AsyncLogger name="org.mule.extension.objectstore" level="WARN"/>
+
+        <!-- Mule logger -->
+        <AsyncLogger name="org.mule.runtime.core.internal.processor.LoggerMessageProcessor" level="INFO"/>
+
+        <!-- MUnit -->
+        <AsyncLogger name="com.mulesoft.munit" level="INFO"/>
+
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="Console"/>
+        </AsyncRoot>
+    </Loggers>
+
+</Configuration>

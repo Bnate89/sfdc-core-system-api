@@ -1,0 +1,18 @@
+# Core Banking System API - PROD Secure Properties
+# Values should be encrypted using secure-properties-tool
+# Format: ![encrypted_value]
+
+secure:
+  encryption:
+    key: "prod-encryption-key16"
+  keystore:
+    path: "keystore/server-prod.jks"
+    password: "![changeit]"
+    keyPassword: "![changeit]"
+    alias: "server"
+  truststore:
+    path: "keystore/truststore-prod.jks"
+    password: "![changeit]"
+  backend:
+    clientId: "![prod-client-id]"
+    clientSecret: "![prod-client-secret]"

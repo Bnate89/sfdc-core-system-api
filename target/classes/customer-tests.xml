@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+		http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- ============================================== -->
+	<!-- CUSTOMER API TESTS                            -->
+	<!-- MUnit tests for Customer operations           -->
+	<!-- ============================================== -->
+
+	<munit:config name="customer-tests.xml"/>
+
+	<!-- ============================================== -->
+	<!-- TEST: GET Customer - Success                  -->
+	<!-- ============================================== -->
+	<munit:test name="get-customer-success-test" doc:name="GET /customers - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:attributes value="#[{
+					method: 'GET',
+					requestPath: '/api/core-banking/v1/customers',
+					queryParams: {
+						customerId: 'CUST-12345'
+					},
+					headers: {
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Get Customer" name="get-customer-subflow" doc:id="2993cfdf-7172-4aa6-8360-a049cf3c4ce6"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Customer ID" 
+				expression="#[payload.customerId]" 
+				is="#[MunitTools::equalTo('CUST-12345')]"/>
+			<munit-tools:assert-that doc:name="Assert Status Active" 
+				expression="#[payload.status]" 
+				is="#[MunitTools::equalTo('ACTIVE')]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: POST Customer - Success                 -->
+	<!-- ============================================== -->
+	<munit:test name="create-customer-success-test" doc:name="POST /customers - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:payload value='#[{
+					"firstName": "Jane",
+					"lastName": "Smith",
+					"dateOfBirth": "1990-05-20",
+					"email": "jane.smith@example.com",
+					"phone": "+1-555-987-6543"
+				}]' mediaType="application/json"/>
+				<munit:attributes value="#[{
+					method: 'POST',
+					requestPath: '/api/core-banking/v1/customers',
+					headers: {
+						'Content-Type': 'application/json',
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Create Customer" name="create-customer-subflow" doc:id="839972cd-2570-47de-a35b-07b60ad2c322"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Customer ID Generated" 
+				expression="#[payload.customerId]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert First Name" 
+				expression="#[payload.firstName]" 
+				is="#[MunitTools::equalTo('Jane')]"/>
+			<munit-tools:assert-that doc:name="Assert Last Name" 
+				expression="#[payload.lastName]" 
+				is="#[MunitTools::equalTo('Smith')]"/>
+			<munit-tools:assert-that doc:name="Assert KYC Status Pending" 
+				expression="#[payload.kycStatus]" 
+				is="#[MunitTools::equalTo('PENDING')]"/>
+			<munit-tools:assert-equals doc:name="Assert HTTP Status 201" 
+				actual="#[vars.httpStatus]" 
+				expected="#[201]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: PUT Customer - Success                  -->
+	<!-- ============================================== -->
+	<munit:test name="update-customer-success-test" doc:name="PUT /customers/{customerId} - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:payload value='#[{
+					"firstName": "John",
+					"lastName": "Doe-Updated",
+					"dateOfBirth": "1985-06-15",
+					"email": "john.doe.updated@example.com",
+					"phone": "+1-555-123-9999",
+					"kycStatus": "VERIFIED",
+					"status": "ACTIVE"
+				}]' mediaType="application/json"/>
+				<munit:attributes value="#[{
+					method: 'PUT',
+					requestPath: '/api/core-banking/v1/customers/CUST-12345',
+					uriParams: {
+						customerId: 'CUST-12345'
+					},
+					headers: {
+						'Content-Type': 'application/json',
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Update Customer" name="update-customer-subflow" doc:id="1c62eae8-1fac-4419-967a-c031e49b5f31"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Customer ID" 
+				expression="#[payload.customerId]" 
+				is="#[MunitTools::equalTo('CUST-12345')]"/>
+			<munit-tools:assert-that doc:name="Assert Last Name Updated" 
+				expression="#[payload.lastName]" 
+				is="#[MunitTools::equalTo('Doe-Updated')]"/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

@@ -1,0 +1,18 @@
+# Core Banking System API - DEV Secure Properties
+# Values should be encrypted using secure-properties-tool
+# Format: ![encrypted_value]
+
+secure:
+  encryption:
+    key: "dev-encryption-key-16"
+  keystore:
+    path: "keystore/server-dev.jks"
+    password: "![changeit]"
+    keyPassword: "![changeit]"
+    alias: "server"
+  truststore:
+    path: "keystore/truststore-dev.jks"
+    password: "![changeit]"
+  backend:
+    clientId: "![dev-client-id]"
+    clientSecret: "![dev-client-secret]"

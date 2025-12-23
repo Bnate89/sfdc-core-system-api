@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- ============================================== -->
+	<!-- GLOBAL ERROR HANDLER                          -->
+	<!-- Centralized error handling for all flows      -->
+	<!-- Maps Mule errors to HTTP status codes         -->
+	<!-- ============================================== -->
+	<error-handler name="Global_Error_Handler" doc:name="Global Error Handler">
+
+		<!-- ============================================== -->
+		<!-- BAD REQUEST - 400                             -->
+		<!-- ============================================== -->
+		<on-error-propagate type="APIKIT:BAD_REQUEST" logException="true" doc:name="On Error Propagate - Bad Request">
+			<ee:transform doc:name="Build 400 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "400",
+	message: error.description default "Bad Request - Invalid input data",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- NOT FOUND - 404                               -->
+		<!-- ============================================== -->
+		<on-error-propagate type="APIKIT:NOT_FOUND" logException="true" doc:name="On Error Propagate - Not Found">
+			<ee:transform doc:name="Build 404 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "404",
+	message: error.description default "Resource not found",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- METHOD NOT ALLOWED - 405                      -->
+		<!-- ============================================== -->
+		<on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED" logException="true" doc:name="On Error Propagate - Method Not Allowed">
+			<ee:transform doc:name="Build 405 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "405",
+	message: error.description default "Method not allowed",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- UNSUPPORTED MEDIA TYPE - 415                  -->
+		<!-- ============================================== -->
+		<on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE" logException="true" doc:name="On Error Propagate - Unsupported Media Type">
+			<ee:transform doc:name="Build 415 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "415",
+	message: error.description default "Unsupported media type",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- NOT ACCEPTABLE - 406                          -->
+		<!-- ============================================== -->
+		<on-error-propagate type="APIKIT:NOT_ACCEPTABLE" logException="true" doc:name="On Error Propagate - Not Acceptable">
+			<ee:transform doc:name="Build 406 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "406",
+	message: error.description default "Not acceptable",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- CUSTOM NOT FOUND - 404                        -->
+		<!-- ============================================== -->
+		<on-error-propagate type="APP:NOT_FOUND" logException="true" doc:name="On Error Propagate - App Not Found">
+			<ee:transform doc:name="Build 404 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "404",
+	message: error.description default "Requested resource not found",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- CUSTOM BAD REQUEST - 400                      -->
+		<!-- ============================================== -->
+		<on-error-propagate type="APP:BAD_REQUEST" logException="true" doc:name="On Error Propagate - App Bad Request">
+			<ee:transform doc:name="Build 400 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "400",
+	message: error.description default "Bad request",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- HTTP CONNECTIVITY - 503                       -->
+		<!-- ============================================== -->
+		<on-error-propagate type="HTTP:CONNECTIVITY" logException="true" doc:name="On Error Propagate - HTTP Connectivity">
+			<ee:transform doc:name="Build 503 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "503",
+	message: "Service temporarily unavailable - Backend system connectivity issue",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[503]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- HTTP TIMEOUT - 504                            -->
+		<!-- ============================================== -->
+		<on-error-propagate type="HTTP:TIMEOUT" logException="true" doc:name="On Error Propagate - HTTP Timeout">
+			<ee:transform doc:name="Build 504 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "504",
+	message: "Gateway timeout - Backend system did not respond in time",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[504]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- EXPRESSION ERROR - 500                        -->
+		<!-- ============================================== -->
+		<on-error-propagate type="EXPRESSION" logException="true" doc:name="On Error Propagate - Expression Error">
+			<ee:transform doc:name="Build 500 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "500",
+	message: "Internal server error - Data transformation failed",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+		<!-- ============================================== -->
+		<!-- CATCH ALL - 500                               -->
+		<!-- ============================================== -->
+		<on-error-propagate type="ANY" logException="true" doc:name="On Error Propagate - Any">
+			<ee:transform doc:name="Build 500 Error Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorCode: "500",
+	message: "Internal server error - An unexpected error occurred",
+	timestamp: now(),
+	correlationId: correlationId
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Log Error" name="common-log-error-subflow"/>
+		</on-error-propagate>
+
+	</error-handler>
+
+</mule>

@@ -1,0 +1,18 @@
+# Core Banking System API - UAT Secure Properties
+# Values should be encrypted using secure-properties-tool
+# Format: ![encrypted_value]
+
+secure:
+  encryption:
+    key: "uat-encryption-key-16"
+  keystore:
+    path: "keystore/server-uat.jks"
+    password: "![changeit]"
+    keyPassword: "![changeit]"
+    alias: "server"
+  truststore:
+    path: "keystore/truststore-uat.jks"
+    password: "![changeit]"
+  backend:
+    clientId: "![uat-client-id]"
+    clientSecret: "![uat-client-secret]"

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <apikit:config name="sfdc-core-system-api-config" api="resource::f3e1964e-b702-452d-b542-4709057d6a84:sfdc-core-system-api:1.0.0:raml:zip:sfdc-core-system-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="sfdc-core-system-api-main">
+        <http:listener config-ref="HTTP_Listener_Config" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <flow-ref doc:name="Initialize Correlation ID" name="common-correlation-id-subflow"/>
+		
+		<!-- Log incoming request -->
+		<flow-ref doc:name="Log Request" name="common-log-request-subflow"/>
+        <apikit:router config-ref="sfdc-core-system-api-config" />
+        <!-- Log outgoing response -->
+		<flow-ref doc:name="Log Response" name="common-log-response-subflow"/>
+		<error-handler ref="Global_Error_Handler" />
+    </flow>
+    <flow name="put:\accounts\(accountId):application\json:sfdc-core-system-api-config">
+		<flow-ref doc:name="update-account-subflow" doc:id="3e55892a-39e1-49cc-9b8b-39975d5e12e2" name="update-account-subflow"/>
+    </flow>
+    <flow name="put:\customers\(customerId):application\json:sfdc-core-system-api-config">
+		<flow-ref doc:name="update-customer-subflow" doc:id="28fd7660-ab19-4d18-8096-226a5373e521" name="update-customer-subflow"/>
+    </flow>
+    <flow name="get:\accounts:sfdc-core-system-api-config" doc:id="a72b88db-d8a1-47b4-9a50-326225985609">
+		<flow-ref doc:name="get-accounts-subflow" doc:id="3991ce65-2d47-4d08-8f64-1b2e93a238b8" name="get-accounts-subflow"/>
+    </flow>
+    <flow name="get:\accounts\(accountId):sfdc-core-system-api-config" doc:id="5c6ad6cf-a096-432e-9688-d16efb83e90a">
+		<flow-ref doc:name="get-account-by-id-subflow" doc:id="987a5e8d-5417-4510-89f2-baca9accadd6" name="get-account-by-id-subflow"/>
+    </flow>
+    <flow name="get:\accounts\(accountId)\balance:sfdc-core-system-api-config" doc:id="66070115-a725-4f97-a9c4-9064a9c52396">
+		<flow-ref doc:name="get-account-balance-subflow" doc:id="42ef2c1a-ad29-4ecc-b38f-5a7d45ca177d" name="get-account-balance-subflow"/>
+    </flow>
+    <flow name="get:\accounts\(accountId)\transactions:sfdc-core-system-api-config" doc:id="defe29b5-e0e0-499f-8cf4-8e09944d394e">
+		<flow-ref doc:name="get-transactions-subflow" doc:id="55353ab8-8977-44cb-8634-2b0da0d46f36" name="get-transactions-subflow"/>
+    </flow>
+    <flow name="get:\customers:sfdc-core-system-api-config">
+		<flow-ref doc:name="get-customer-subflow" doc:id="e65bc618-32eb-4859-9bce-5536d0d8d7ec" name="get-customer-subflow"/>
+    </flow>
+    <flow name="post:\accounts\(accountId)\transactions:application\json:sfdc-core-system-api-config" doc:id="2bfeb089-aa45-4b43-8bcc-3428fbe28c3b">
+		<flow-ref doc:name="create-transaction-subflow" doc:id="a7c00b6f-6aa6-4c1c-af20-09879e142013" name="create-transaction-subflow"/>
+    </flow>
+    <flow name="post:\accounts:application\json:sfdc-core-system-api-config" doc:id="f6e9757c-6d86-4d04-be6f-9efa93fb5afd">
+		<flow-ref doc:name="create-account-subflow" doc:id="821c8778-82c6-44d7-8409-64872c9b0368" name="create-account-subflow"/>
+    </flow>
+    <flow name="post:\customers:application\json:sfdc-core-system-api-config">
+		<flow-ref doc:name="create-customer-subflow" doc:id="feb189fb-d1df-4946-9016-8f987f1f5948" name="create-customer-subflow"/>
+    </flow>
+</mule>

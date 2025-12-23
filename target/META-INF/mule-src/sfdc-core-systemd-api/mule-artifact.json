@@ -1,0 +1,11 @@
+{
+  "minMuleVersion": "4.9.3",
+  "javaSpecificationVersions": ["17"],
+  "secureProperties": [
+    "secure.keystore.password",
+    "secure.keystore.keyPassword",
+    "secure.truststore.password",
+    "secure.backend.clientId",
+    "secure.backend.clientSecret"
+  ]
+}

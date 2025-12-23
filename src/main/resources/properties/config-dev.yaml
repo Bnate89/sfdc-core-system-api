@@ -1,0 +1,41 @@
+# Core Banking System API - DEV Environment Configuration
+# All values must be strings
+
+http:
+  host: "0.0.0.0"
+  port: "8081"
+  basePath: "/api/core-banking/v1"
+
+https:
+  port: "8082"
+
+api:
+  name: "core-banking-system-api"
+  version: "v1"
+  autodiscovery:
+    id: "12345678"
+
+logging:
+  level: "DEBUG"
+  maskFields: "accountNumber,ssn,password,clientSecret"
+
+objectstore:
+  persistent: "true"
+  maxEntries: "1000"
+  entryTtl: "30"
+  entryTtlUnit: "MINUTES"
+  expirationInterval: "5"
+  expirationIntervalUnit: "MINUTES"
+
+reconnection:
+  frequency: "5000"
+  count: "3"
+
+responseTimeout: "30000"
+
+coreBanking:
+  backend:
+    host: "localhost"
+    port: "9090"
+    basePath: "/core-banking-backend"
+    protocol: "HTTP"

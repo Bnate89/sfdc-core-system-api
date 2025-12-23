@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- ============================================== -->
+	<!-- GET CUSTOMER SUBFLOW                          -->
+	<!-- Retrieves customer by customerId              -->
+	<!-- ============================================== -->
+	<sub-flow name="get-customer-subflow" doc:name="Get Customer Implementation" doc:id="465b8723-6373-4c98-90f0-1000eb8064a1">
+		<!-- Extract query parameter -->
+		<set-variable variableName="customerId" value="#[attributes.queryParams.customerId]" doc:name="Set Customer ID"/>
+		
+		<logger level="DEBUG" doc:name="Log Customer Lookup" 
+			message="#['[' ++ vars.correlationId ++ '] Looking up customer: ' ++ vars.customerId]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Customer Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	customerId: vars.customerId,
+	firstName: "John",
+	lastName: "Doe",
+	dateOfBirth: "1985-06-15",
+	email: "john.doe@example.com",
+	phone: "+1-555-123-4567",
+	kycStatus: "VERIFIED",
+	status: "ACTIVE"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build success response -->
+		<flow-ref doc:name="Build Success Response" name="common-build-success-response-subflow"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- CREATE CUSTOMER SUBFLOW                       -->
+	<!-- Creates a new customer in core banking        -->
+	<!-- ============================================== -->
+	<sub-flow name="create-customer-subflow" doc:name="Create Customer Implementation" doc:id="97e2ea71-9dcf-425f-96f5-9e55e20f8d0b">
+		<!-- Store incoming payload -->
+		<set-variable variableName="customerRequest" value="#[payload]" doc:name="Store Customer Request"/>
+		
+		<logger level="DEBUG" doc:name="Log Customer Creation" 
+			message="#['[' ++ vars.correlationId ++ '] Creating new customer: ' ++ vars.customerRequest.firstName ++ ' ' ++ vars.customerRequest.lastName]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Created Customer Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+---
+{
+	customerId: uuid(),
+	firstName: vars.customerRequest.firstName,
+	lastName: vars.customerRequest.lastName,
+	dateOfBirth: vars.customerRequest.dateOfBirth,
+	email: vars.customerRequest.email,
+	phone: vars.customerRequest.phone,
+	kycStatus: "PENDING",
+	status: "ACTIVE"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build 201 Created response -->
+		<flow-ref doc:name="Build Created Response" name="common-build-created-response-subflow"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- UPDATE CUSTOMER SUBFLOW                       -->
+	<!-- Updates existing customer details             -->
+	<!-- ============================================== -->
+	<sub-flow name="update-customer-subflow" doc:name="Update Customer Implementation" doc:id="29b4a8fe-7cfb-4fc9-9d5e-19a78c8c03bf">
+		<!-- Extract URI parameter -->
+		<set-variable variableName="customerId" value="#[attributes.uriParams.customerId]" doc:name="Set Customer ID"/>
+		<set-variable variableName="customerRequest" value="#[payload]" doc:name="Store Customer Request"/>
+		
+		<logger level="DEBUG" doc:name="Log Customer Update" 
+			message="#['[' ++ vars.correlationId ++ '] Updating customer: ' ++ vars.customerId]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Updated Customer Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	customerId: vars.customerId,
+	firstName: vars.customerRequest.firstName,
+	lastName: vars.customerRequest.lastName,
+	dateOfBirth: vars.customerRequest.dateOfBirth,
+	email: vars.customerRequest.email,
+	phone: vars.customerRequest.phone,
+	kycStatus: vars.customerRequest.kycStatus default "VERIFIED",
+	status: vars.customerRequest.status default "ACTIVE"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build success response -->
+		<flow-ref doc:name="Build Success Response" name="common-build-success-response-subflow"/>
+	</sub-flow>
+
+</mule>

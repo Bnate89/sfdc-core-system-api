@@ -1,0 +1,55 @@
+{
+  "configs": [
+    "global.xml",
+    "implementation/account-implementation.xml",
+    "sfdc-core-system-api.xml",
+    "common/common-utilities.xml",
+    "global-error-handler.xml",
+    "implementation/transaction-implementation.xml",
+    "implementation/customer-implementation.xml"
+  ],
+  "secureProperties": [
+    "secure.keystore.password",
+    "secure.keystore.keyPassword",
+    "secure.truststore.password",
+    "secure.backend.clientId",
+    "secure.backend.clientSecret"
+  ],
+  "supportedJavaVersions": [],
+  "redeploymentEnabled": true,
+  "name": "f3e1964e-b702-452d-b542-4709057d6a84:sfdc-core-systemd-api:1.0.0",
+  "minMuleVersion": "4.9.3",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "application-types.xml",
+        "common/common-utilities.xml",
+        "global-error-handler.xml",
+        "global.xml",
+        "implementation/account-implementation.xml",
+        "implementation/customer-implementation.xml",
+        "implementation/transaction-implementation.xml",
+        "log4j2.xml",
+        "properties/config-dev.yaml",
+        "properties/config-prod.yaml",
+        "properties/config-qa.yaml",
+        "properties/config-secure-dev.yaml",
+        "properties/config-secure-prod.yaml",
+        "properties/config-secure-qa.yaml",
+        "properties/config-secure-uat.yaml",
+        "properties/config-uat.yaml",
+        "sfdc-core-system-api.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  },
+  "javaSpecificationVersions": [
+    "17"
+  ]
+}

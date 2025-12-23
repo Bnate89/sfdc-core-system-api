@@ -1,0 +1,41 @@
+# Core Banking System API - UAT Environment Configuration
+# All values must be strings
+
+http:
+  host: "0.0.0.0"
+  port: "8081"
+  basePath: "/api/core-banking/v1"
+
+https:
+  port: "8082"
+
+api:
+  name: "core-banking-system-api"
+  version: "v1"
+  autodiscovery:
+    id: "34567890"
+
+logging:
+  level: "INFO"
+  maskFields: "accountNumber,ssn,password,clientSecret"
+
+objectstore:
+  persistent: "true"
+  maxEntries: "5000"
+  entryTtl: "120"
+  entryTtlUnit: "MINUTES"
+  expirationInterval: "15"
+  expirationIntervalUnit: "MINUTES"
+
+reconnection:
+  frequency: "5000"
+  count: "5"
+
+responseTimeout: "30000"
+
+coreBanking:
+  backend:
+    host: "uat-core-banking.internal"
+    port: "443"
+    basePath: "/core-banking-backend"
+    protocol: "HTTPS"

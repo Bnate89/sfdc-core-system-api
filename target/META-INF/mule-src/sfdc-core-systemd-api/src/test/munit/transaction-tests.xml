@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+		http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- ============================================== -->
+	<!-- TRANSACTION API TESTS                         -->
+	<!-- MUnit tests for Transaction operations        -->
+	<!-- ============================================== -->
+
+	<munit:config name="transaction-tests.xml"/>
+
+	<!-- ============================================== -->
+	<!-- TEST: GET Transactions - Success              -->
+	<!-- ============================================== -->
+	<munit:test name="get-transactions-success-test" doc:name="GET /accounts/{accountId}/transactions - Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:attributes value="#[{
+					method: 'GET',
+					requestPath: '/api/core-banking/v1/accounts/ACC-001/transactions',
+					uriParams: {
+						accountId: 'ACC-001'
+					},
+					queryParams: {
+						limit: '50'
+					},
+					headers: {
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Get Transactions" name="get:\accounts\(accountId)\transactions:sfdc-core-system-api-config" doc:id="755aaed4-398d-45fa-8812-608588c57b61"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Array Response" 
+				expression="#[sizeOf(payload)]" 
+				is="#[MunitTools::greaterThan(0)]"/>
+			<munit-tools:assert-that doc:name="Assert First Transaction Has Account ID" 
+				expression="#[payload[0].accountId]" 
+				is="#[MunitTools::equalTo('ACC-001')]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: GET Transactions with Date Filter       -->
+	<!-- ============================================== -->
+	<munit:test name="get-transactions-with-date-filter-test" doc:name="GET /accounts/{accountId}/transactions with Date Filter">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:attributes value="#[{
+					method: 'GET',
+					requestPath: '/api/core-banking/v1/accounts/ACC-001/transactions',
+					uriParams: {
+						accountId: 'ACC-001'
+					},
+					queryParams: {
+						fromDate: '2024-01-01',
+						toDate: '2024-12-31',
+						limit: '100'
+					},
+					headers: {
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Get Transactions" name="create-transaction-subflow" doc:id="835733ee-e23d-4a85-b54f-eb63206eff1c"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Array Response" 
+				expression="#[sizeOf(payload)]" 
+				is="#[MunitTools::greaterThanOrEqualTo(0)]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: POST Transaction - Credit Success       -->
+	<!-- ============================================== -->
+	<munit:test name="create-credit-transaction-success-test" doc:name="POST /accounts/{accountId}/transactions - Credit Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:payload value='#[{
+					"accountId": "ACC-001",
+					"amount": 1000.00,
+					"currency": "USD",
+					"transactionType": "CREDIT",
+					"description": "Salary Deposit"
+				}]' mediaType="application/json"/>
+				<munit:attributes value="#[{
+					method: 'POST',
+					requestPath: '/api/core-banking/v1/accounts/ACC-001/transactions',
+					uriParams: {
+						accountId: 'ACC-001'
+					},
+					headers: {
+						'Content-Type': 'application/json',
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Create Transaction" name="post:\accounts\(accountId)\transactions:application\json:sfdc-core-system-api-config" doc:id="0e34cdfb-83d5-4ef2-b289-bb5d8a60353d"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Transaction ID Generated" 
+				expression="#[payload.transactionId]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Transaction Type" 
+				expression="#[payload.transactionType]" 
+				is="#[MunitTools::equalTo('CREDIT')]"/>
+			<munit-tools:assert-that doc:name="Assert Amount" 
+				expression="#[payload.amount]" 
+				is="#[MunitTools::equalTo(1000.00)]"/>
+			<munit-tools:assert-equals doc:name="Assert HTTP Status 201" 
+				actual="#[vars.httpStatus]" 
+				expected="#[201]"/>
+		</munit:validation>
+	</munit:test>
+
+	<!-- ============================================== -->
+	<!-- TEST: POST Transaction - Debit Success        -->
+	<!-- ============================================== -->
+	<munit:test name="create-debit-transaction-success-test" doc:name="POST /accounts/{accountId}/transactions - Debit Success">
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input Event">
+				<munit:payload value='#[{
+					"accountId": "ACC-001",
+					"amount": -250.50,
+					"currency": "USD",
+					"transactionType": "DEBIT",
+					"description": "ATM Withdrawal"
+				}]' mediaType="application/json"/>
+				<munit:attributes value="#[{
+					method: 'POST',
+					requestPath: '/api/core-banking/v1/accounts/ACC-001/transactions',
+					uriParams: {
+						accountId: 'ACC-001'
+					},
+					headers: {
+						'Content-Type': 'application/json',
+						'client_id': 'test-client-id',
+						'client_secret': 'test-client-secret'
+					}
+				}]"/>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Call Create Transaction" name="create-transaction-subflow" doc:id="19e51f9a-fc28-4e64-b360-741c671651b5"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert Payload Not Null" 
+				expression="#[payload]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Transaction ID Generated" 
+				expression="#[payload.transactionId]" 
+				is="#[MunitTools::notNullValue()]"/>
+			<munit-tools:assert-that doc:name="Assert Transaction Type" 
+				expression="#[payload.transactionType]" 
+				is="#[MunitTools::equalTo('DEBIT')]"/>
+			<munit-tools:assert-that doc:name="Assert Description" 
+				expression="#[payload.description]" 
+				is="#[MunitTools::equalTo('ATM Withdrawal')]"/>
+			<munit-tools:assert-equals doc:name="Assert HTTP Status 201" 
+				actual="#[vars.httpStatus]" 
+				expected="#[201]"/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

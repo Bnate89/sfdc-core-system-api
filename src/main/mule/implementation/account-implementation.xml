@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- ============================================== -->
+	<!-- GET ACCOUNTS SUBFLOW                          -->
+	<!-- Retrieves accounts for a customer             -->
+	<!-- ============================================== -->
+	<sub-flow name="get-accounts-subflow" doc:name="Get Accounts Implementation" doc:id="5c959c39-42dc-46da-b172-ecea0238a9fc">
+		<!-- Extract query parameter -->
+		<set-variable variableName="customerId" value="#[attributes.queryParams.customerId]" doc:name="Set Customer ID"/>
+		
+		<logger level="DEBUG" doc:name="Log Accounts Lookup" 
+			message="#['[' ++ vars.correlationId ++ '] Looking up accounts for customer: ' ++ vars.customerId]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Accounts Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+	{
+		accountId: "ACC-001-" ++ vars.customerId,
+		customerId: vars.customerId,
+		accountType: "CHECKING",
+		currency: "USD",
+		status: "ACTIVE",
+		openedDate: "2020-01-15"
+	},
+	{
+		accountId: "ACC-002-" ++ vars.customerId,
+		customerId: vars.customerId,
+		accountType: "SAVINGS",
+		currency: "USD",
+		status: "ACTIVE",
+		openedDate: "2020-03-22"
+	}
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build success response -->
+		<flow-ref doc:name="Build Success Response" name="common-build-success-response-subflow"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- CREATE ACCOUNT SUBFLOW                        -->
+	<!-- Opens a new account for a customer            -->
+	<!-- ============================================== -->
+	<sub-flow name="create-account-subflow" doc:name="Create Account Implementation" doc:id="d0806c74-6205-4fb5-bcb1-a26da2b5da07">
+		<!-- Store incoming payload -->
+		<set-variable variableName="accountRequest" value="#[payload]" doc:name="Store Account Request"/>
+		
+		<logger level="DEBUG" doc:name="Log Account Creation" 
+			message="#['[' ++ vars.correlationId ++ '] Creating new account for customer: ' ++ vars.accountRequest.customerId]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Created Account Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	accountId: uuid(),
+	customerId: vars.accountRequest.customerId,
+	accountType: vars.accountRequest.accountType,
+	currency: vars.accountRequest.currency,
+	status: "ACTIVE",
+	openedDate: now() as Date as String {format: "yyyy-MM-dd"}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build 201 Created response -->
+		<flow-ref doc:name="Build Created Response" name="common-build-created-response-subflow"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- GET ACCOUNT BY ID SUBFLOW                     -->
+	<!-- Retrieves account details by accountId        -->
+	<!-- ============================================== -->
+	<sub-flow name="get-account-by-id-subflow" doc:name="Get Account By ID Implementation" doc:id="1947cedd-f924-4f7d-8dbe-7a531bea322e">
+		<!-- Extract URI parameter -->
+		<set-variable variableName="accountId" value="#[attributes.uriParams.accountId]" doc:name="Set Account ID"/>
+		
+		<logger level="DEBUG" doc:name="Log Account Lookup" 
+			message="#['[' ++ vars.correlationId ++ '] Looking up account: ' ++ vars.accountId]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Account Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	accountId: vars.accountId,
+	customerId: "CUST-12345",
+	accountType: "CHECKING",
+	currency: "USD",
+	status: "ACTIVE",
+	openedDate: "2020-01-15"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build success response -->
+		<flow-ref doc:name="Build Success Response" name="common-build-success-response-subflow"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- UPDATE ACCOUNT SUBFLOW                        -->
+	<!-- Updates account attributes or status          -->
+	<!-- ============================================== -->
+	<sub-flow name="update-account-subflow" doc:name="Update Account Implementation" doc:id="914b3b89-e8be-4c78-a3f3-de257b15047c">
+		<!-- Extract URI parameter -->
+		<set-variable variableName="accountId" value="#[attributes.uriParams.accountId]" doc:name="Set Account ID"/>
+		<set-variable variableName="accountRequest" value="#[payload]" doc:name="Store Account Request"/>
+		
+		<logger level="DEBUG" doc:name="Log Account Update" 
+			message="#['[' ++ vars.correlationId ++ '] Updating account: ' ++ vars.accountId]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Updated Account Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	accountId: vars.accountId,
+	customerId: vars.accountRequest.customerId,
+	accountType: vars.accountRequest.accountType,
+	currency: vars.accountRequest.currency,
+	status: vars.accountRequest.status default "ACTIVE",
+	openedDate: vars.accountRequest.openedDate
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build success response -->
+		<flow-ref doc:name="Build Success Response" name="common-build-success-response-subflow"/>
+	</sub-flow>
+
+	<!-- ============================================== -->
+	<!-- GET ACCOUNT BALANCE SUBFLOW                   -->
+	<!-- Retrieves account balance                     -->
+	<!-- ============================================== -->
+	<sub-flow name="get-account-balance-subflow" doc:name="Get Account Balance Implementation" doc:id="d7264c88-1509-4f1e-8905-f4850a060278">
+		<!-- Extract URI parameter -->
+		<set-variable variableName="accountId" value="#[attributes.uriParams.accountId]" doc:name="Set Account ID"/>
+		
+		<logger level="DEBUG" doc:name="Log Balance Lookup" 
+			message="#['[' ++ vars.correlationId ++ '] Looking up balance for account: ' ++ vars.accountId]"/>
+		
+		<!-- Mock implementation - In production, this would call backend system -->
+		<ee:transform doc:name="Build Balance Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	accountId: vars.accountId,
+	availableBalance: 15750.50,
+	currentBalance: 16250.75,
+	currency: "USD",
+	asOfDate: now()
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+		<!-- Build success response -->
+		<flow-ref doc:name="Build Success Response" name="common-build-success-response-subflow"/>
+	</sub-flow>
+
+</mule>
